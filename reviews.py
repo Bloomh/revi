@@ -1,6 +1,9 @@
 import requests
 from pprint import pprint
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 payload = {
     'source': 'google_shopping_search',
@@ -16,7 +19,7 @@ payload = {
 response = requests.request(
     'POST',
     'https://realtime.oxylabs.io/v1/queries',
-    auth=('afry477_X2w0Z', 'DpLGCM3Vk_WhNP_'),
+    auth=(os.getenv('OXYLABS_USER'), os.getenv('OXYLABS_PASS')),
     json=payload,
 )
 
