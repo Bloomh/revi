@@ -3,7 +3,7 @@ from youtube_search import search_videos as search_youtube_videos, download_audi
 from tiktok_search import search_videos as search_tiktok_videos, download_audio as download_tiktok_audio, get_video_dir as get_tiktok_video_dir
 from transcribing_utils import transcribe_audio
 from review_generator import process_query_directory
-from reviews import get_product_reviews
+from reviews import get_product_reviews, get_review_summary
 import logging
 import json
 from utils import get_query_dir
@@ -39,6 +39,14 @@ def search():
             valid_urls = [url for url in results['img_urls'] if url.startswith(('http://', 'https://'))] 
             results['img_urls'] = valid_urls
             logger.info(f'Found {len(valid_urls)} valid images')
+
+        summary_result = get_review_summary(query, results)
+        if summary_result['error']:
+            logger.warning(f'Error getting review summary: {summary_result["error"]}')
+        else:
+            logger.info('Successfully retrieved review summary')
+            logger.info(f'Review summary: {summary_result["summary"]}')
+            results['summary'] = summary_result["summary"]
         
         # Create directory for this search query
         query_dir = get_query_dir(query)
@@ -165,7 +173,9 @@ def search():
             'status': 'success', 
             'reviews': results.get('reviews', []),
             'weighted_avg_rating': results.get('weighted_avg_rating', 0),
-            'total_reviews': results.get('total_reviews', 0)
+            'total_reviews': results.get('total_reviews', 0),
+            'summary': results.get('summary'),
+            'img_urls': results.get('img_urls', [])
         })
     
     # For direct browser requests, render the template

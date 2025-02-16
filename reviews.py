@@ -2,6 +2,11 @@ import requests
 from typing import Dict, Any
 from dotenv import load_dotenv
 import os
+import logging
+from openai import OpenAI
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -132,6 +137,54 @@ def get_product_reviews(query: str, pages: int = 2) -> Dict[str, Any]:
             "error": f"Unexpected error: {str(e)}"
         }
 
-# Example usage:
-# result = get_product_reviews("apple airpods pro 2")
-# print(result)
+def get_review_summary(query: str, results: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Get a summary of reviews for a product using Perplexity AI.
+
+    Args:
+        query (str): The product to get review summary for
+        results (Dict[str, Any]): The results of the product reviews
+
+    Returns:
+        Dict containing:
+            summary (str): Summary of reviews
+            error (str): Error message if any, None otherwise
+    """
+    try:
+        client = OpenAI()
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a review aggregator artificial intelligence assistant and you need to "
+                    "help the user summarize reviews for a product they queried from across the internet. "
+                    "Do not provide citations for any website in your response."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Provide a 2-3 sentence summary of reviews across the internet for {query}. Use the {results['weighted_avg_rating']} out of 5 to inform your summary review as well, but do not restate this rating explicitly."
+                ),
+            },
+        ]
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=150,
+        )
+
+        return {
+            "summary": response.choices[0].message.content,
+            "error": None
+        }
+    except Exception as e:
+        logger.error(f"Error getting review summary: {str(e)}", exc_info=True)
+        return {
+            "summary": None,
+            "error": f"Error getting review summary: {str(e)}"
+        }
+
+

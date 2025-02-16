@@ -42,15 +42,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         <main class="results-section">
                         <div class="results-header">
-                            <h2>Results for "${query}"</h2>
                             <div class="results-summary">
                                 <div class="product-info">
-                                    <div class="product-image-container">
-                                        <div class="no-image">
-                                            <i class="fas fa-image"></i>
-                                            <span>No images available</span>
+                                    ${data.img_urls && data.img_urls.length > 0 ? `
+                                        <div class="product-image-container">
+                                            <img
+                                                src="${data.img_urls[0]}"
+                                                alt="${query} - Image"
+                                                class="product-image"
+                                                id="productImage"
+                                            />
                                         </div>
-                                    </div>
+                                    ` : ''}
+                                    <h3 class="product-name">${query}</h3>
                                 </div>
                                 
                                 <div class="rating-card">
@@ -64,13 +68,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                             }).join('')}
                                         </div>
                                         <div class="rating-number">${data.weighted_avg_rating.toFixed(1)}</div>
+                                        <br/>
+                                        <div class="stat-item">
+                                            <span class="stat-value">${data.total_reviews.toLocaleString()}</span>
+                                            <span class="stat-label">&nbsp;&nbsp;Reviews</span>
+                                        </div>
                                     </div>
                                     
                                     <div class="rating-stats">
-                                        <div class="stat-item">
-                                            <span class="stat-label">Total Reviews</span>
-                                            <span class="stat-value">${data.total_reviews.toLocaleString()}</span>
-                                        </div>
+                                        ${data.summary ? `
+                                            <p class="summary-text">${data.summary}</p>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>

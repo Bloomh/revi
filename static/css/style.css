@@ -243,25 +243,6 @@ body {
     line-height: 1.5;
 }
 
-.results-section {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    animation: slideUp 0.8s ease-out;
-    padding-top: 2rem;
-}
-
-.results-header {
-    text-align: center;
-}
-
-.results-header h2 {
-    font-size: 1.5rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-}
-
 .results-summary {
     display: flex;
     flex-direction: column;
@@ -273,6 +254,93 @@ body {
     box-shadow: var(--shadow);
     max-width: 600px;
     margin: 0 auto;
+}
+
+.product-info {
+    text-align: center;
+}
+
+.product-name {
+    margin-top: 1rem;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.rating-card {
+    width: 100%;
+    padding: 1.5rem;
+    background: var(--input-background);
+    border-radius: 16px;
+}
+
+.rating-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.stars {
+    font-size: 1.8rem;
+    color: #fbbf24;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.rating-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.rating-stats {
+    padding-top: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.stat-item.summary-container {
+    display: block;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summary-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.summary-card {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--input-background);
+    border-radius: 16px;
+    width: 100%;
+}
+
+.summary-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
 }
 
 .product-info {

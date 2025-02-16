@@ -383,7 +383,7 @@ def main():
             print(f"\nProcessing video: {video['title']}")
             video_id = video['video_id']
             
-            # # Try to get transcript first – skip for now to avoid high cost API queries
+            # # Try to get transcript first – skip for now to avoid high cost API queries
             # print("Checking YouTube transcript availability...")
             # transcript_result = get_transcript(video_id, video['title'], query_dir)
             

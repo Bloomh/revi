@@ -19,25 +19,19 @@
         
         <main class="results-section">
             <div class="results-header">
-                <h2>Results for "{{ query }}"</h2>
                 {% if results.error %}
-                    <div class="error-message">
-                        {{ results.error }}
-                    </div>
+                    <div class="error-message">{{ results.error }}</div>
                 {% else %}
                     <div class="results-summary">
                         <div class="product-info">
                             <div class="product-image-container">
                                 {% if results.img_urls %}
-                                    <div class="single-image-wrapper">
-                                        {% if results.img_urls|length > 0 %}
-                                            <img 
-                                                src="{{ results.img_urls[0] }}" 
-                                                alt="{{ query }}"
-                                                class="product-image"
-                                            >
-                                        {% endif %}
-                                    </div>
+                                    <img
+                                        src="{{ results.img_urls[0] }}"
+                                        alt="{{ query }} - Image"
+                                        class="product-image"
+                                        id="productImage"
+                                    />
                                 {% else %}
                                     <div class="no-image">
                                         <i class="fas fa-image"></i>
@@ -45,8 +39,9 @@
                                     </div>
                                 {% endif %}
                             </div>
+                            <h3 class="product-name">{{ query }}</h3>
                         </div>
-                        
+
                         <div class="rating-card">
                             <div class="rating-header">
                                 <div class="stars">
@@ -61,18 +56,26 @@
                                         {% endif %}
                                     {% endfor %}
                                 </div>
-                                <div class="rating-number">{{ "%.1f"|format(results.weighted_avg_rating) }}</div>
-                            </div>
-                            
-                            <div class="rating-stats">
+                                <div class="rating-number">
+                                    {{ "%.1f"|format(results.weighted_avg_rating) }}
+                                </div>
+                                <br/>
                                 <div class="stat-item">
-                                    <span class="stat-label">Total Reviews</span>
                                     <span class="stat-value">{{ "{:,}".format(results.total_reviews) }}</span>
+                                    <span class="stat-label">&nbsp;&nbsp;Reviews</span>
                                 </div>
                             </div>
+
+                            <div class="rating-stats">
+                                {% if results.summary %}
+                                    <p class="summary-text">{{ results.summary }}</p>
+                                {% endif %}
+                            </div>
                         </div>
-                        
-                        {% if results.reviews %}
+                    </div>
+                {% endif %}
+
+                {% if results.reviews %}
                         <div class="video-reviews">
                             <div class="reviews-grid">
                                 {% for review in results.reviews %}
