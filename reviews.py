@@ -37,7 +37,7 @@ def get_product_reviews(query: str, pages: int = 2) -> Dict[str, Any]:
             'https://realtime.oxylabs.io/v1/queries',
             auth=(os.getenv('OXYLABS_USER'), os.getenv('OXYLABS_PASS')),
             json=payload,
-            timeout=30
+            timeout=40
         )
 
         response.raise_for_status()

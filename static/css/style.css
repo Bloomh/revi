@@ -44,6 +44,18 @@ body {
     animation: fadeIn 0.8s ease-out;
 }
 
+.results-header-position {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    right: auto;
+    justify-content: flex-start;
+}
+
+.results-header-position h1 {
+    font-size: 2rem;
+}
+
 .header h1 {
     font-size: 4.5rem;
     font-weight: 700;
@@ -63,6 +75,7 @@ body {
     flex-direction: column;
     gap: 2rem;
     animation: slideUp 0.8s ease-out;
+    padding-top: 2rem;
 }
 
 .results-header {
@@ -210,13 +223,10 @@ body {
     width: 300px;
     height: 300px;
     position: relative;
-    border-radius: 12px;
-    background: var(--input-background);
-    overflow: hidden;
     margin: 0 auto;
 }
 
-.gallery-wrapper {
+.single-image-wrapper {
     position: relative;
     width: 100%;
     height: 100%;
@@ -224,88 +234,12 @@ body {
 }
 
 .product-image {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
     object-fit: contain;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1;
-}
-
-.product-image.active {
-    opacity: 1;
-    z-index: 2;
-}
-
-.product-image.active.loaded {
     opacity: 1;
 }
 
-.product-image[style*="display: none"] {
-    position: absolute;
-    opacity: 0;
-    z-index: -1;
-}
-
-.gallery-controls {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 3;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 10px;
-}
-
-.gallery-nav {
-    background: rgba(255, 255, 255, 0.8);
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    color: var(--text-primary);
-}
-
-.gallery-nav:hover {
-    background: rgba(255, 255, 255, 0.9);
-}
-
-.gallery-counter {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-}
-
-.image-loading-spinner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-    color: var(--primary-color);
-    z-index: 4;
-}
-
-.product-image-container.error .image-loading-spinner {
-    display: none;
-}
 
 .no-image {
     width: 100%;

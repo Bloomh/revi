@@ -36,7 +36,7 @@ def search():
                 else:
                     logger.warning(f'Invalid image URL format: {url}')
             results['img_urls'] = valid_urls
-            logger.info(f'Using {len(valid_urls)} valid images')
+            logger.info(f'Found {len(valid_urls)} valid images')
         else:
             logger.info('No images found in results')
         

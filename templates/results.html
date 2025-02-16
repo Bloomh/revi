@@ -7,10 +7,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/results.js') }}"></script>
 </head>
 <body>
     <div class="container">
-        <header class="header">
+        <header class="header results-header-position">
             <a href="/" class="logo">
                 <h1>Revi</h1>
             </a>
@@ -28,29 +29,14 @@
                         <div class="product-info">
                             <div class="product-image-container">
                                 {% if results.img_urls %}
-                                    <div class="gallery-controls">
-                                        <button class="gallery-nav prev" onclick="prevImage()">
-                                            <i class="fas fa-chevron-left"></i>
-                                        </button>
-                                        <button class="gallery-nav next" onclick="nextImage()">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                        <div class="gallery-counter"></div>
-                                    </div>
-                                    <div class="gallery-wrapper">
-                                        {% for img_url in results.img_urls %}
+                                    <div class="single-image-wrapper">
+                                        {% if results.img_urls|length > 0 %}
                                             <img 
-                                                src="{{ img_url }}" 
-                                                alt="{{ query }} - Image {{ loop.index }}"
-                                                class="product-image {% if loop.first %}active{% endif %}"
-                                                onload="handleImageLoad(this)"
-                                                onerror="handleImageError(this)"
-                                                data-index="{{ loop.index0 }}"
+                                                src="{{ results.img_urls[0] }}" 
+                                                alt="{{ query }}"
+                                                class="product-image"
                                             >
-                                        {% endfor %}
-                                    </div>
-                                    <div class="image-loading-spinner">
-                                        <i class="fas fa-spinner fa-spin"></i>
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <div class="no-image">
@@ -59,7 +45,6 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            <h3 class="product-name">{{ query }}</h3>
                         </div>
                         
                         <div class="rating-card">
@@ -107,101 +92,9 @@
             <div class="loader-star">
                 <i class="fas fa-star"></i>
             </div>
-            <p>Gathering reviews...</p>
+            <p>Analyzing reviews...</p>
         </div>
     </div>
 
-    <script>
-        let currentImageIndex = 0;
-        const images = document.querySelectorAll('.product-image');
-        let loadedImages = 0;
-        
-        function updateGalleryCounter() {
-            const counter = document.querySelector('.gallery-counter');
-            if (counter && images.length > 0) {
-                counter.textContent = `${currentImageIndex + 1} / ${images.length}`;
-            }
-        }
-        
-        function showImage(index) {
-            console.log(`Showing image ${index + 1} of ${images.length}`);
-            images.forEach(img => img.classList.remove('active'));
-            images[index].classList.add('active');
-            updateGalleryCounter();
-        }
-        
-        function nextImage() {
-            currentImageIndex = (currentImageIndex + 1) % images.length;
-            showImage(currentImageIndex);
-        }
-        
-        function prevImage() {
-            currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
-            showImage(currentImageIndex);
-        }
-        
-        function handleImageLoad(img) {
-            console.log('Image loaded:', img.src);
-            img.classList.add('loaded');
-            loadedImages++;
-            
-            // Hide spinner when first image is loaded
-            if (loadedImages === 1) {
-                const spinner = document.querySelector('.image-loading-spinner');
-                if (spinner) {
-                    spinner.style.display = 'none';
-                }
-            }
-            
-            updateGalleryCounter();
-        }
-
-        function handleImageError(img) {
-            console.error('Image failed to load:', img.src);
-            img.style.display = 'none';
-            loadedImages++;
-            
-            // If all images failed, show error state
-            if (loadedImages === images.length && Array.from(images).every(img => img.style.display === 'none')) {
-                const wrapper = document.querySelector('.gallery-wrapper');
-                if (wrapper) {
-                    wrapper.innerHTML = `
-                        <div class="no-image">
-                            <i class="fas fa-image"></i>
-                            <span>No images available</span>
-                        </div>
-                    `;
-                }
-            }
-        }
-        
-        // Initialize gallery counter
-        document.addEventListener('DOMContentLoaded', function() {
-            updateGalleryCounter();
-        });
-
-        // Remove loading overlay when the page is fully loaded
-        window.addEventListener('load', function() {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            if (loadingOverlay) {
-                console.log('Removing loading overlay');
-                loadingOverlay.classList.remove('visible');
-            }
-        });
-    </script>
-
-    <script>
-        // Show loading overlay when form is submitted
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchForm = document.querySelector('.search-form');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            
-            if (searchForm) {
-                searchForm.addEventListener('submit', function() {
-                    loadingOverlay.classList.add('visible');
-                });
-            }
-        });
-    </script>
 </body>
 </html>
