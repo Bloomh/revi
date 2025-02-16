@@ -58,7 +58,7 @@ def transcribe_audio(audio_path):
                 'error': "OPENAI_API_KEY not found in environment variables"
             }
         
-        client = OpenAI()
+        client = OpenAI(api_key=api_key)
 
         logger.info(f"Transcribing audio: {audio_path}")
         

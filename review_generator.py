@@ -4,7 +4,7 @@ from pathlib import Path
 import openai
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Initialize OpenAI client
 openai.api_key = os.getenv('OPENAI_API_KEY')

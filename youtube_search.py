@@ -223,15 +223,19 @@ def download_audio(video_url, video_id, title, query_dir):
             'quiet': True,
             'no_warnings': True,
             'nocheckcertificate': True,
+            'no_check_certificate': True,  # For older versions
             # Add rate limiting to avoid throttling
             'socket_timeout': 10,
             'retries': 3,
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Sec-Fetch-Mode': 'navigate'
-            }
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-Dest': 'document'
+            },
+            'http_chunk_size': 10485760  # 10MB chunks
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

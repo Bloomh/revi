@@ -52,11 +52,11 @@ def search():
         query_dir = get_query_dir(query)
         
         # Start the YouTube search process
-        youtube_videos = search_youtube_videos(query, max_results=5, query_dir=query_dir)
+        youtube_videos = search_youtube_videos(query, max_results=4, query_dir=query_dir)
         youtube_reviews = []
         
         # Start the TikTok search process
-        tiktok_videos = search_tiktok_videos(query, max_results=10, query_dir=query_dir)
+        tiktok_videos = search_tiktok_videos(query, max_results=8, query_dir=query_dir)
         tiktok_reviews = []
         
         # Process YouTube videos

@@ -78,31 +78,94 @@ def download_audio(video_url, video_id, title, query_dir):
         logger.info(f"Audio already exists for video {video_id}")
         return str(audio_path)
     
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'outtmpl': str(video_dir / 'audio.%(ext)s'),  # Use a simple fixed filename
-        'max_filesize': 10000000,  # 10MB limit to prevent huge downloads
-        'quiet': True,
-        'no_warnings': True
-    }
-    
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([video_url])
+    def try_api_download():
+        try:
+            # Get video metadata using EnsembleData API
+            api_key = os.getenv('ENSEMBLEDDATA_API_KEY')
+            root = "https://ensembledata.com/apis"
+            endpoint = "/tt/video/details"
             
-            # Find the downloaded audio file
-            for file in video_dir.glob('*.mp3'):
-                # Rename to standard name
-                file.rename(audio_path)
+            params = {
+                "aweme_id": video_id,
+                "token": api_key
+            }
+            
+            response = requests.get(root + endpoint, params=params)
+            response.raise_for_status()
+            video_data = response.json()
+            
+            if 'data' in video_data and 'video' in video_data['data']:
+                video_info = video_data['data']['video']
+                if 'play_addr' in video_info and 'url_list' in video_info['play_addr']:
+                    direct_url = video_info['play_addr']['url_list'][0]
+                    
+                    # Download video using requests
+                    video_response = requests.get(direct_url, stream=True)
+                    video_response.raise_for_status()
+                    
+                    temp_video = video_dir / 'temp.mp4'
+                    with open(temp_video, 'wb') as f:
+                        for chunk in video_response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                    
+                    # Convert to audio using ffmpeg
+                    import subprocess
+                    subprocess.run([
+                        'ffmpeg', '-i', str(temp_video),
+                        '-vn', '-acodec', 'libmp3lame', '-q:a', '4',
+                        str(audio_path)
+                    ], check=True, capture_output=True)
+                    
+                    # Clean up temp file
+                    temp_video.unlink()
+                    
+                    return str(audio_path)
+            return None
+        except Exception as e:
+            logger.error(f"API download failed: {str(e)}")
+            return None
+    
+    def try_yt_dlp_download():
+        try:
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }],
+                'outtmpl': str(video_dir / 'audio.%(ext)s'),
+                'max_filesize': 10000000,  # 10MB limit
+                'quiet': True,
+                'no_warnings': True,
+                'nocheckcertificate': True,
+                'no_check_certificate': True,
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-Dest': 'document',
+                    'Cookie': 'tt_webid_v2=1234567890123456789'
+                }
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([video_url])
                 return str(audio_path)
-    except Exception as e:
-        logger.error(f"Error downloading audio for video {video_id}: {str(e)}")
-        return None
+        except Exception as e:
+            logger.error(f"yt-dlp download failed: {str(e)}")
+            return None
+    
+    # Try API download first, then fall back to yt-dlp
+    result = try_api_download()
+    if result:
+        return result
+    
+    logger.info("API download failed, trying yt-dlp...")
+    return try_yt_dlp_download()
 
 """
 Search for TikTok videos using EnsembleData API.

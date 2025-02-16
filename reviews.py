@@ -8,7 +8,7 @@ from openai import OpenAI
 # Set up logger
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+load_dotenv(override=True)
 
 def get_product_reviews(query: str, pages: int = 2) -> Dict[str, Any]:
     """
@@ -151,7 +151,10 @@ def get_review_summary(query: str, results: Dict[str, Any]) -> Dict[str, Any]:
             error (str): Error message if any, None otherwise
     """
     try:
-        client = OpenAI()
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            return None, "OPENAI_API_KEY not found in environment variables"
+        client = OpenAI(api_key=api_key)
         messages = [
             {
                 "role": "system",
