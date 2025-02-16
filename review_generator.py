@@ -157,7 +157,8 @@ def process_query_directory(query_dir):
                         'video_title': video_data['video_info']['title'],
                         'channel': video_data['video_info']['channel'],
                         'review_text': review['review_text'],
-                        'rating': review['rating']
+                        'rating': review['rating'],
+                        'video_url': video_data['video_info']['video_url']
                     })
                     print(f"Added review with rating: {review['rating']} stars")
                 except Exception as e:

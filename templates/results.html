@@ -71,15 +71,50 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        {% if results.youtube_reviews %}
+                        <div class="youtube-reviews">
+                            <div class="reviews-grid">
+                                {% for review in results.youtube_reviews %}
+                                <div class="review-card">
+                                    <div class="review-rating">
+                                        {% for i in range(5) %}
+                                            {% if i < review.rating|int %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="review-content">
+                                        <p>{{ review.review_text }}</p>
+                                    </div>
+                                    <div class="review-source">
+                                        <i class="fab fa-youtube"></i>
+                                        <span>{{ review.channel }}</span>
+                                    </div>
+                                    {% if review.video_title %}
+                                    <div class="review-video-title">
+                                        <i class="fas fa-video"></i>
+                                        <span>{{ review.video_title }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 {% endif %}
             </div>
-            
+        </main>
+        
+        <div class="search-again-container">
             <a href="/" class="search-again-button">
                 <i class="fas fa-search"></i>
                 Search Again
             </a>
-        </main>
+        </div>
 
         <footer class="footer">
             <p>TreeHacks 2025 | Made by Henry Bloom & Alexis Fry</p>

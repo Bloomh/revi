@@ -48,8 +48,11 @@ body {
     position: fixed;
     top: 1rem;
     left: 1rem;
-    right: auto;
-    justify-content: flex-start;
+    right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
 }
 
 .results-header-position h1 {
@@ -67,6 +70,152 @@ body {
 /* Results page styles */
 .logo {
     text-decoration: none;
+}
+
+.search-again-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+    margin-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.search-again-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow);
+}
+
+.search-again-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px -1px rgb(0 0 0 / 0.15);
+}
+
+.search-again-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow);
+}
+
+/* Reviews */
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 0 1rem;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.review-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    transition: all 0.2s ease;
+    border: 1px solid #e5e7eb;
+    height: fit-content;
+}
+
+.review-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px -1px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+}
+
+.review-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    gap: 1rem;
+}
+
+.review-rating {
+    color: #fbbf24;
+    font-size: 1.25rem;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.youtube-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #ff0000;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 9999px;
+    background: #fee2e2;
+    transition: all 0.2s ease;
+    margin-left: auto;
+}
+
+.youtube-link:hover {
+    background: #fecaca;
+    transform: scale(1.05);
+}
+
+.youtube-link i {
+    font-size: 1rem;
+}
+
+.review-content {
+    margin: 1rem 0;
+}
+
+.review-content p {
+    line-height: 1.5;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.review-source {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Error message */
+.error-message {
+    text-align: center;
+    padding: 2.5rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    margin: 2rem auto;
+    max-width: 600px;
+    animation: slideUp 0.8s ease-out;
+}
+
+.error-message h2 {
+    color: #dc2626;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.error-message p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
 }
 
 .results-section {
@@ -131,6 +280,80 @@ body {
     color: #fbbf24;
     display: flex;
     gap: 0.25rem;
+}
+
+/* YouTube Reviews */
+.youtube-reviews {
+    width: 100%;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.youtube-reviews h3 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.review-card {
+    background: var(--input-background);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.review-card:hover {
+    transform: translateY(-2px);
+}
+
+.review-rating {
+    color: #fbbf24;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.review-content {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.review-source {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.review-source i {
+    color: #ff0000;
+}
+
+.review-video-title {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.review-video-title i {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 .rating-number {

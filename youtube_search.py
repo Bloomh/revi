@@ -70,7 +70,7 @@ def search_videos(query, max_results=2):
     
     Args:
         query (str): Search query
-        max_results (int): Maximum number of results to return (default: 5)
+        max_results (int): Maximum number of results to return (default: 2)
         
     Returns:
         list: List of video information dictionaries
@@ -106,12 +106,14 @@ def search_videos(query, max_results=2):
             if not video_ids:
                 return []
             
+            logger.info(f'Found {len(video_ids)} video IDs, fetching full details...')
             # Get full video details in a single request
             video_response = youtube.videos().list(
                 part='snippet,statistics,contentDetails',
                 id=','.join(video_ids),
                 fields='items(id,snippet(title,description,channelTitle,publishedAt,thumbnails/high/url),statistics,contentDetails/duration)'
             ).execute()
+            logger.info(f'Retrieved details for {len(video_response.get("items", []))} videos')
             
             for video_details in video_response.get('items', []):
                 snippet = video_details['snippet']
@@ -133,7 +135,12 @@ def search_videos(query, max_results=2):
                     'duration': duration,
                 }
 
-                logger.info("video info: {}".format(video_info))
+                logger.info(f'Processed video info:')
+                logger.info(f'  - Title: {video_info["title"]}')
+                logger.info(f'  - Channel: {video_info["channel"]}')
+                logger.info(f'  - Duration: {video_info["duration"]}')
+                logger.info(f'  - Views: {video_info["view_count"]}')
+                logger.info(f'  - URL: {video_info["video_url"]}')
 
                 videos.append(video_info)
                 
@@ -215,14 +222,14 @@ def download_audio(video_url, video_id, title, query_dir):
     try:
         video_dir = get_video_dir(video_id, title, query_dir)
         
-        # Configure options for smaller file size
+        # Configure options for smaller file size and download time
         ydl_opts = {
             # Try to get lower quality audio first
             'format': 'worstaudio/bestaudio',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '96',  # Lower quality MP3 (96kbps instead of 192kbps)
+                'preferredquality': '32',  # Lowest quality MP3 for testing
             }],
             'outtmpl': str(video_dir / 'audio.%(ext)s'),
             'quiet': True,

@@ -59,13 +59,30 @@ def transcribe_audio(audio_path):
             }
         
         client = OpenAI()
+
+        logger.info(f"Transcribing audio: {audio_path}")
+        
+        # Read only first 100KB of audio
+        MAX_SIZE = 50 * 1024  # 100KB in bytes
         
         with open(audio_path, "rb") as audio_file:
+            audio_data = audio_file.read(MAX_SIZE)
+            
+        # Create a temporary file with truncated audio
+        temp_audio_path = Path(audio_path).with_suffix('.temp.mp3')
+        with open(temp_audio_path, "wb") as temp_file:
+            temp_file.write(audio_data)
+        
+        # Transcribe the truncated audio
+        with open(temp_audio_path, "rb") as audio_file:
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
                 response_format="text"
             )
+            
+        # Clean up temporary file
+        temp_audio_path.unlink()
         
         # Check if transcript is in English
         if not is_english_text(transcript):
