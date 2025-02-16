@@ -72,12 +72,20 @@
                             </div>
                         </div>
                         
-                        {% if results.youtube_reviews %}
-                        <div class="youtube-reviews">
+                        {% if results.reviews %}
+                        <div class="video-reviews">
                             <div class="reviews-grid">
-                                {% for review in results.youtube_reviews %}
+                                {% for review in results.reviews %}
                                 <div class="review-card">
-                                    <div class="review-rating">
+                                    <div class="review-header">
+                                        <div class="platform-icon">
+                                            {% if review.platform == 'youtube' %}
+                                                <i class="fab fa-youtube"></i>
+                                            {% elif review.platform == 'tiktok' %}
+                                                <i class="fab fa-tiktok"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="review-rating">
                                         {% for i in range(5) %}
                                             {% if i < review.rating|int %}
                                                 <i class="fas fa-star"></i>

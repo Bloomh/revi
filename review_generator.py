@@ -27,7 +27,7 @@ def generate_review(video_data, transcript):
     prompt = f"""Based on this {platform} review:
 Title: {video_data['title']}
 Channel: {video_data['channel']}
-Description: {video_data['description']}
+Description: {video_data.get('description', 'Not available')}
 
 Transcript: {transcript}
 
@@ -61,7 +61,7 @@ Make sure to:
                 {"role": "user", "content": prompt}
             ],
             response_format={"type": "json_object"},
-            temperature=0.7
+            temperature=0.6
         )
 
         content = response.choices[0].message.content
@@ -158,7 +158,8 @@ def process_query_directory(query_dir):
                         'channel': video_data['video_info']['channel'],
                         'review_text': review['review_text'],
                         'rating': review['rating'],
-                        'video_url': video_data['video_info']['video_url']
+                        'video_url': video_data['video_info']['video_url'],
+                        'platform': video_data['video_info'].get('platform', 'youtube')
                     })
                     print(f"Added review with rating: {review['rating']} stars")
                 except Exception as e:

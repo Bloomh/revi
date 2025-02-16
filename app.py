@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, jsonify
-from youtube_search import search_videos, download_audio, get_video_dir, save_video_data
+from youtube_search import search_videos as search_youtube_videos, download_audio as download_youtube_audio, get_video_dir as get_youtube_video_dir, save_video_data
+from tiktok_search import search_videos as search_tiktok_videos, download_audio as download_tiktok_audio, get_video_dir as get_tiktok_video_dir
 from transcribing_utils import transcribe_audio
 from review_generator import process_query_directory
 from reviews import get_product_reviews
-from pathlib import Path
 import logging
-from datetime import datetime
 import json
+from utils import get_query_dir
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -40,22 +40,24 @@ def search():
             results['img_urls'] = valid_urls
             logger.info(f'Found {len(valid_urls)} valid images')
         
-        # Create timestamp for query directory
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        query_dir = Path('downloads') / f'{query}-{timestamp}'
-        query_dir.mkdir(parents=True, exist_ok=True)
+        # Create directory for this search query
+        query_dir = get_query_dir(query)
         
         # Start the YouTube search process
-        videos = search_videos(query, max_results=2)
+        youtube_videos = search_youtube_videos(query, max_results=2, query_dir=query_dir) # TODO: increase to 5
         youtube_reviews = []
         
-        if videos:
-            # Process each video
-            for video in videos:
+        # Start the TikTok search process
+        tiktok_videos = search_tiktok_videos(query, max_results=5, query_dir=query_dir) # TODO: increase to 10
+        tiktok_reviews = []
+        
+        # Process YouTube videos
+        if youtube_videos:
+            for video in youtube_videos:
                 try:
-                    logger.info(f'Processing video: {video["title"]} (ID: {video["video_id"]})')
+                    logger.info(f'Processing YouTube video: {video["title"]} (ID: {video["video_id"]})')
                     # Download audio and transcribe with Whisper
-                    audio_path = download_audio(video['video_url'], video['video_id'], video['title'], query_dir)
+                    audio_path = download_youtube_audio(video['video_url'], video['video_id'], video['title'], query_dir)
                     logger.info(f'Audio download result: {"Success" if audio_path else "Failed"}')
                     
                     if audio_path:
@@ -66,7 +68,7 @@ def search():
                             logger.info('Whisper transcription successful')
                             
                             # Save video data
-                            video_dir = get_video_dir(video['video_id'], video['title'], query_dir)
+                            video_dir = get_youtube_video_dir(video['video_id'], video['title'], query_dir)
                             save_video_data(
                                 video_dir=video_dir,
                                 video_info={
@@ -74,7 +76,7 @@ def search():
                                     'description': video.get('description', ''),
                                     'channel': video['channel'],
                                     'publishedAt': video.get('published_at', ''),
-                                    'platform': 'YouTube',
+                                    'platform': 'youtube',
                                     'statistics': {
                                         'viewCount': str(video.get('view_count', 0)),
                                         'likeCount': str(video.get('like_count', 0)),
@@ -85,48 +87,89 @@ def search():
                                 transcript=whisper_result['transcript']
                             )
                             
-                            # Generate reviews
-                            logger.info('Generating reviews from transcript...')
-                            generated_reviews = process_query_directory(str(query_dir))
-                            if generated_reviews:
-                                logger.info(f'Generated {len(generated_reviews)} reviews')
-                                youtube_reviews.extend(generated_reviews)
-                            else:
-                                logger.warning('No reviews were generated from the transcript')
-                                
+                            youtube_reviews.append({
+                                'title': video['title'],
+                                'url': video['video_url'],
+                                'transcript': whisper_result['transcript'],
+                                'platform': 'youtube'
+                            })
                 except Exception as e:
-                    logger.error(f'Error processing video {video["video_id"]}: {str(e)}')
-                    continue
-        
-        # Deduplicate YouTube reviews based on video URL
-        if youtube_reviews:
-            seen_urls = set()
-            unique_reviews = []
-            for review in youtube_reviews:
-                if review['video_url'] not in seen_urls:
-                    seen_urls.add(review['video_url'])
-                    unique_reviews.append(review)
-            results['youtube_reviews'] = unique_reviews
-        
-        # For AJAX requests, do the processing and return results
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({
-                'status': 'success',
-                'reviews': results.get('youtube_reviews', []),
-                'weighted_avg_rating': results.get('weighted_avg_rating', 0),
-                'total_reviews': results.get('total_reviews', 0)
-            })
-            
-        # For direct browser requests, just render the template with any existing results
-        # This prevents reprocessing when redirected from search
-        return render_template('results.html', query=query, results=results)
-                              
+                    logger.error(f'Error processing YouTube video: {str(e)}')
+                    
+        # Process TikTok videos
+        if tiktok_videos:
+            for video in tiktok_videos:
+                try:
+                    logger.info(f'Processing TikTok video: {video["title"]} (ID: {video["video_id"]})')
+                    # Download audio and transcribe with Whisper
+                    audio_path = download_tiktok_audio(video['video_url'], video['video_id'], video['title'], query_dir)
+                    logger.info(f'Audio download result: {"Success" if audio_path else "Failed"}')
+                    
+                    if audio_path:
+                        logger.info(f'Audio downloaded successfully: {audio_path}')
+                        whisper_result = transcribe_audio(audio_path)
+                        
+                        if whisper_result['available']:
+                            logger.info('Whisper transcription successful')
+                            
+                            # Save video data
+                            video_dir = get_tiktok_video_dir(video['video_id'], video['title'], query_dir)
+                            save_video_data(
+                                video_dir=video_dir,
+                                video_info={
+                                    'title': video['title'],
+                                    'channel': video['channel'],
+                                    'platform': 'tiktok',
+                                    'description': video.get('caption', ''),
+                                    'statistics': {
+                                        'viewCount': str(video.get('view_count', 0))
+                                    },
+                                    'video_url': video.get('video_url', ''),
+                                },
+                                transcript=whisper_result['transcript']
+                            )
+                            
+                            tiktok_reviews.append({
+                                'title': video['title'],
+                                'url': video['video_url'],
+                                'transcript': whisper_result['transcript'],
+                                'platform': 'tiktok'
+                            })
+                except Exception as e:
+                    logger.error(f'Error processing TikTok video: {str(e)}')
+                    
+        # Generate reviews from all videos
+        all_reviews = youtube_reviews + tiktok_reviews
+        if all_reviews:
+            logger.info('Generating reviews from transcripts...')
+            generated_reviews = process_query_directory(str(query_dir))
+            if generated_reviews:
+                logger.info(f'Generated {len(generated_reviews)} reviews')
+                for review in generated_reviews:
+                    review['platform'] = review.get('platform', 'youtube')
+                results['reviews'] = generated_reviews
+            else:
+                logger.warning('No reviews were generated from the transcript')
+                results['reviews'] = all_reviews
+                
     except Exception as e:
-        logger.error(f'Error processing request: {str(e)}', exc_info=True)
-        error_msg = f'Error processing request: {str(e)}'
+        logger.error(f'Error processing search: {str(e)}')
+        error_msg = f'Error processing search: {str(e)}'
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'status': 'error', 'message': error_msg})
+            return jsonify({'error': error_msg})
         return render_template('results.html', query=query, results={'error': error_msg})
+
+    # For AJAX requests, return JSON response
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'status': 'success', 
+            'reviews': results.get('reviews', []),
+            'weighted_avg_rating': results.get('weighted_avg_rating', 0),
+            'total_reviews': results.get('total_reviews', 0)
+        })
+    
+    # For direct browser requests, render the template
+    return render_template('results.html', query=query, results=results)
 
 if __name__ == '__main__':
     app.run(debug=True)

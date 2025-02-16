@@ -25,7 +25,7 @@ TOKEN_FILE = 'token.pickle'
 CREDENTIALS_FILE = 'youtube_client_secrets.json'
 
 # Create downloads directory if it doesn't exist
-DOWNLOADS_DIR = Path('downloads')
+from utils import get_query_dir, DOWNLOADS_DIR
 DOWNLOADS_DIR.mkdir(exist_ok=True)
 
 # Load environment variables
@@ -64,17 +64,22 @@ def get_video_details(youtube, video_id):
         logger.error(f"Error getting video details: {str(e)}")
         return None
 
-def search_videos(query, max_results=2):
-    """
-    Search for YouTube videos using the YouTube Data API.
+"""
+Search for YouTube videos using the YouTube Data API.
+
+Args:
+    query (str): Search query
+    max_results (int): Maximum number of results to return (default: 2)
+    query_dir (Path): Directory to save video data (default: None)
     
-    Args:
-        query (str): Search query
-        max_results (int): Maximum number of results to return (default: 2)
-        
-    Returns:
-        list: List of video information dictionaries
-    """
+Returns:
+    list: List of video information dictionaries
+"""
+def search_videos(query, max_results=2, query_dir=None):
+    # If no query_dir provided, create a default one
+    if query_dir is None:
+        query_dir = get_query_dir(query)
+
     # Get both API keys
     api_key = os.getenv("YOUTUBE_API_KEY")
     api_key_2 = os.getenv("YOUTUBE_API_KEY_2")
@@ -166,24 +171,6 @@ def search_videos(query, max_results=2):
     # If we get here, all keys failed
     logger.error("All API keys have failed or exceeded quota")
     return []
-
-def get_query_dir(query):
-    """
-    Get the directory for a specific search query's results.
-    
-    Args:
-        query (str): Search query
-        
-    Returns:
-        Path: Path to the query's directory
-    """
-    # Clean the query to make it filesystem-friendly
-    clean_query = ''.join(c for c in query if c.isalnum() or c in ' -_')[:50].strip()
-    # Add timestamp to make each search unique
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    query_dir = DOWNLOADS_DIR / f"{clean_query}-{timestamp}"
-    query_dir.mkdir(parents=True, exist_ok=True)
-    return query_dir
 
 def get_video_dir(video_id, title, query_dir, create=True):
     """

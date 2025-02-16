@@ -62,20 +62,8 @@ def transcribe_audio(audio_path):
 
         logger.info(f"Transcribing audio: {audio_path}")
         
-        # Read first 20MB of audio
-        MAX_SIZE = 20 * 1024 * 1024  # 20MB in bytes
-        logger.info(f"Reading up to {MAX_SIZE/1024/1024:.1f}MB of audio from {audio_path}")
-        
+        # Transcribe the audio
         with open(audio_path, "rb") as audio_file:
-            audio_data = audio_file.read(MAX_SIZE)
-            
-        # Create a temporary file with truncated audio
-        temp_audio_path = Path(audio_path).with_suffix('.temp.mp3')
-        with open(temp_audio_path, "wb") as temp_file:
-            temp_file.write(audio_data)
-        
-        # Transcribe the truncated audio
-        with open(temp_audio_path, "rb") as audio_file:
             response = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
@@ -83,9 +71,6 @@ def transcribe_audio(audio_path):
             )
             transcript = str(response) if response else ''
             logger.info(f"Raw transcription response: {transcript[:200]}...")
-            
-        # Clean up temporary file
-        temp_audio_path.unlink()
         
         # Check if transcript is in English
         if not is_english_text(transcript):

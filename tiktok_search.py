@@ -1,70 +1,19 @@
 import logging
 import os
 import requests
+from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 from transcribing_utils import transcribe_audio, is_english_text, save_video_data
 import yt_dlp
-
-def is_relevant_content(transcript, query):
-    """
-    Check if the transcript contains actual speech and any search terms.
-    
-    Args:
-        transcript (dict or str): Transcribed audio text from OpenAI API
-        query (str): Search query
-        
-    Returns:
-        bool: True if content seems relevant
-    """
-    if not transcript or not query:
-        return False
-        
-    # Handle transcript being a dictionary from OpenAI API
-    if isinstance(transcript, dict):
-        transcript_text = transcript.get('text', '')
-    else:
-        transcript_text = str(transcript)
-                
-    # Check if transcript has enough words to be actual speech (not just music)
-    min_words = 5
-    if len(transcript_text.split()) < min_words:
-        logger.info(f"Transcript too short: {transcript_text}")
-        return False
-    
-    # Check if any search terms appear in the transcript
-    query_terms = query.lower().split()
-    transcript_lower = transcript_text.lower()
-    
-    for term in query_terms:
-        if term in transcript_lower:
-            logger.info(f"Found search term '{term}' in transcript")
-            return True
-    
-    logger.info(f"No search terms found in transcript")
-    return False
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Create downloads directory if it doesn't exist
-DOWNLOADS_DIR = Path('downloads')
+from utils import get_query_dir, DOWNLOADS_DIR
 DOWNLOADS_DIR.mkdir(exist_ok=True)
-
-def get_query_dir(query):
-    """
-    Get the directory for a specific search query's results.
-    
-    Args:
-        query (str): Search query
-        
-    Returns:
-        Path: Path to the query's directory
-    """
-    query_dir = DOWNLOADS_DIR / query.replace(' ', '_').lower()
-    query_dir.mkdir(exist_ok=True)
-    return query_dir
 
 def sanitize_filename(filename, max_length=50):
     """
@@ -137,7 +86,7 @@ def download_audio(video_url, video_id, title, query_dir):
             'preferredquality': '192',
         }],
         'outtmpl': str(video_dir / 'audio.%(ext)s'),  # Use a simple fixed filename
-        'max_filesize': 20000000,  # 20MB limit to prevent huge downloads
+        'max_filesize': 10000000,  # 10MB limit to prevent huge downloads
         'quiet': True,
         'no_warnings': True
     }
@@ -155,21 +104,24 @@ def download_audio(video_url, video_id, title, query_dir):
         logger.error(f"Error downloading audio for video {video_id}: {str(e)}")
         return None
 
-def search_videos(query, max_results=2):
-    """
-    Search for TikTok videos using EnsembleData API.
+"""
+Search for TikTok videos using EnsembleData API.
+
+Args:
+    query (str): Search query
+    max_results (int): Maximum number of results to return (default: 2)
+    query_dir (Path): Directory to save video data (default: None)
     
-    Args:
-        query (str): Search query
-        max_results (int): Maximum number of results to return (default: 2)
-        
-    Returns:
-        list: List of video information dictionaries
-    """
+Returns:
+    list: List of video information dictionaries
+"""
+def search_videos(query, max_results=2, query_dir=None):
     # Load environment variables
     load_dotenv(override=True)
     
-    query_dir = get_query_dir(query)
+    # If no query_dir provided, create a default one
+    if query_dir is None:
+        query_dir = get_query_dir(query)
     
     # Load API key from environment
     api_key = os.getenv('ENSEMBLEDDATA_API_KEY')
@@ -214,6 +166,8 @@ def search_videos(query, max_results=2):
                 video_list = search_results['data']['data']
             else:
                 video_list = []
+        
+        print(f"Found {len(video_list)} videos")
             
         for item in video_list[:max_results]:
             # Parse the item data
@@ -227,7 +181,8 @@ def search_videos(query, max_results=2):
                     'video_url': f"https://www.tiktok.com/@{author_info.get('unique_id', '')}/video/{aweme_info.get('aweme_id', '')}",
                     'duration': int(aweme_info.get('duration', 0)),
                     'view_count': int(aweme_info.get('statistics', {}).get('play_count', 0)),
-                    'platform': 'tiktok'
+                    'platform': 'tiktok',
+                    'caption': str(aweme_info.get('desc', ''))
                 }
             except (KeyError, TypeError, ValueError) as e:
                 logger.error(f"Error parsing video data: {str(e)}")
@@ -256,10 +211,7 @@ def search_videos(query, max_results=2):
                 is_english = is_english_text(transcript)
                 logger.info(f"Transcript is English: {is_english}")
                 
-                is_relevant = is_relevant_content(transcript, query)
-                logger.info(f"Video is relevant: {is_relevant}")
-                
-                if transcript and is_english and is_relevant:
+                if transcript and is_english:
                     video_info['transcript'] = transcript
                     videos.append(video_info)
                     

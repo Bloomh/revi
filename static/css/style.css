@@ -564,6 +564,56 @@ body {
     margin-bottom: 1rem;
 }
 
+.video-reviews {
+    margin-top: 2rem;
+}
+
+.reviews-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.review-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.platform-icon {
+    margin-right: 10px;
+}
+
+.platform-icon .fa-youtube {
+    color: #FF0000;
+    font-size: 1.2em;
+}
+
+.platform-icon .fa-tiktok {
+    color: #000000;
+    font-size: 1.2em;
+}
+
+.review-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.review-content {
+    margin-top: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
 #product-search {
     flex-grow: 1;
     padding: 1rem 1.5rem;
