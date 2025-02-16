@@ -32,7 +32,7 @@ Description: {video_data['description']}
 Transcript: {transcript}
 
 Write a customer review as if you personally used the product. The review should:
-1. Be 2-4 sentences long
+1. Be 1-4 sentences long
 2. Include specific details about the product's features and performance
 3. Give a rating out of 5 stars
 4. Focus on your direct experience with the product
@@ -42,7 +42,7 @@ Write a customer review as if you personally used the product. The review should
 
 Respond with a JSON object in this exact format, with no deviations:
 {{
-    "review_text": "Your 2-4 sentence review here",
+    "review_text": "Your 1-4 sentence review here",
     "rating": "Your rating out of 5 stars here"
 }}
 
