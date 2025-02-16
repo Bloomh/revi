@@ -1,18 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Flask App</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
-  <body>
+    <title>Revi - Product Review Aggregator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
     <div class="container">
-      <h1>Welcome to Flask</h1>
-      <p>Your Flask application is running successfully!</p>
+        <header class="header">
+            <h1>Revi</h1>
+        </header>
+        
+        <main class="search-section">
+            <form id="search-form" class="search-form">
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        name="product" 
+                        id="product-search" 
+                        placeholder="Enter a product name (e.g., Dyson Airwrap, iPhone 15)"
+                        required
+                    >
+                    <button type="submit" class="search-button">
+                        <i class="fas fa-search"></i>
+                        Search Reviews
+                    </button>
+                </div>
+                <p class="search-hint">Aggregated reviews to help you make good purchases in seconds</p>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <p>TreeHacks 2025 | Made by Henry Bloom & Alexis Fry</p>
+        </footer>
     </div>
-  </body>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader">
+            <div class="loader-star">
+                <i class="fas fa-star"></i>
+            </div>
+            <p>Gathering reviews...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchForm = document.getElementById('search-form');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            searchForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const query = document.getElementById('product-search').value;
+                
+                try {
+                    // Show loading overlay
+                    loadingOverlay.classList.add('visible');
+                    console.log('Loading overlay shown');
+                    
+                    // Make the request
+                    const response = await fetch(`/search?product=${encodeURIComponent(query)}`);
+                    const html = await response.text();
+                    
+                    // Update the page content
+                    document.documentElement.innerHTML = html;
+                    
+                    // Update the URL
+                    history.pushState({}, '', `/search?product=${encodeURIComponent(query)}`);
+                    
+                    console.log('Search completed');
+                } catch (error) {
+                    console.error('Search error:', error);
+                    loadingOverlay.classList.remove('visible');
+                }
+            });
+        });
+    </script>
+</body>
 </html>
