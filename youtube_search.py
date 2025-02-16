@@ -219,6 +219,7 @@ def download_audio(video_url, video_id, title, query_dir):
                 'preferredquality': '32',  # Lowest quality MP3 for testing
             }],
             'outtmpl': str(video_dir / 'audio.%(ext)s'),
+            'max_filesize': 10000000, # 10MB limit to prevent huge downloads
             'quiet': True,
             'no_warnings': True,
             'nocheckcertificate': True,

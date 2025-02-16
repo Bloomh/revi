@@ -98,8 +98,19 @@
                                         <p>{{ review.review_text }}</p>
                                     </div>
                                     <div class="review-source">
-                                        <i class="fab fa-youtube"></i>
-                                        <span>{{ review.channel }}</span>
+                                        {% if review.platform == 'youtube' %}
+                                            <i class="fab fa-youtube"></i>
+                                            <span>{{ review.channel }}</span>
+                                            <a href="{{ review.url }}" target="_blank" class="watch-button youtube">
+                                                <i class="fab fa-youtube"></i> Watch on YouTube
+                                            </a>
+                                        {% elif review.platform == 'tiktok' %}
+                                            <i class="fab fa-tiktok"></i>
+                                            <span>{{ review.channel }}</span>
+                                            <a href="{{ review.url }}" target="_blank" class="watch-button tiktok">
+                                                <i class="fab fa-tiktok"></i> Watch on TikTok
+                                            </a>
+                                        {% endif %}
                                     </div>
                                     {% if review.video_title %}
                                     <div class="review-video-title">

@@ -44,11 +44,11 @@ def search():
         query_dir = get_query_dir(query)
         
         # Start the YouTube search process
-        youtube_videos = search_youtube_videos(query, max_results=2, query_dir=query_dir) # TODO: increase to 5
+        youtube_videos = search_youtube_videos(query, max_results=5, query_dir=query_dir)
         youtube_reviews = []
         
         # Start the TikTok search process
-        tiktok_videos = search_tiktok_videos(query, max_results=5, query_dir=query_dir) # TODO: increase to 10
+        tiktok_videos = search_tiktok_videos(query, max_results=10, query_dir=query_dir)
         tiktok_reviews = []
         
         # Process YouTube videos
@@ -91,7 +91,8 @@ def search():
                                 'title': video['title'],
                                 'url': video['video_url'],
                                 'transcript': whisper_result['transcript'],
-                                'platform': 'youtube'
+                                'platform': 'youtube',
+                                'channel': video['channel']
                             })
                 except Exception as e:
                     logger.error(f'Error processing YouTube video: {str(e)}')
@@ -133,7 +134,8 @@ def search():
                                 'title': video['title'],
                                 'url': video['video_url'],
                                 'transcript': whisper_result['transcript'],
-                                'platform': 'tiktok'
+                                'platform': 'tiktok',
+                                'channel': video['channel']
                             })
                 except Exception as e:
                     logger.error(f'Error processing TikTok video: {str(e)}')
@@ -145,8 +147,6 @@ def search():
             generated_reviews = process_query_directory(str(query_dir))
             if generated_reviews:
                 logger.info(f'Generated {len(generated_reviews)} reviews')
-                for review in generated_reviews:
-                    review['platform'] = review.get('platform', 'youtube')
                 results['reviews'] = generated_reviews
             else:
                 logger.warning('No reviews were generated from the transcript')

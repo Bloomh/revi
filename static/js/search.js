@@ -88,9 +88,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     '<i class="far fa-star"></i>'
                                                 ).join('')}
                                             </div>
-                                            <a href="${review.video_url}" target="_blank" class="youtube-link">
-                                                <i class="fab fa-youtube"></i>
-                                                <span>Watch on YouTube</span>
+                                            <a href="${review.video_url}" target="_blank" class="${review.platform}-link">
+                                                <i class="fab fa-${review.platform}"></i>
+                                                <span>Watch on ${review.platform}</span>
                                             </a>
                                         </div>
                                         <div class="review-content">
