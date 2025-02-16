@@ -1,6 +1,6 @@
-# Revi - Video Review Aggregator
+# Revi
 
-Revi is a powerful platform that aggregates and analyzes product reviews, providing AI-generated summaries and insights.
+Aggregated, AI-generated reviews to help you make good purchases in seconds.
 
 ## Setup
 
