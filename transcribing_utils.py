@@ -26,7 +26,9 @@ def is_english_text(text):
         bool: True if text is in English, False otherwise
     """
     try:
-        return detect(text) == 'en'
+        detected_language = detect(text)
+        logger.info(f"Detected language: {detected_language}")
+        return detected_language == 'en'
     except:
         return False
 

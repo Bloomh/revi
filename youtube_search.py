@@ -57,9 +57,6 @@ def get_video_details(youtube, video_id):
                 'channel': video['snippet'].get('channelTitle', ''),
                 'publishedAt': video['snippet'].get('publishedAt', ''),
                 'statistics': video['statistics'],
-                'duration': video['contentDetails'].get('duration', ''),
-                'defaultLanguage': video['snippet'].get('defaultLanguage', ''),
-                'defaultAudioLanguage': video['snippet'].get('defaultAudioLanguage', '')
             }
         return None
         
@@ -67,7 +64,7 @@ def get_video_details(youtube, video_id):
         logger.error(f"Error getting video details: {str(e)}")
         return None
 
-def search_videos(query, max_results=1):
+def search_videos(query, max_results=2):
     """
     Search for YouTube videos using the YouTube Data API.
     
@@ -94,75 +91,60 @@ def search_videos(query, max_results=1):
 
             review_query = f"{query} review"
             
-            # Call the search.list method
+            # First get video IDs
             search_response = youtube.search().list(
                 q=review_query,
-                part='id,snippet',
-                maxResults=max_results,  # Request more results since we'll filter some out
+                part='id',  # Only get IDs, not snippets
+                maxResults=max_results,
                 type='video',
-                relevanceLanguage='en'  # Prefer English results
+                fields='items(id/videoId)'  # Only get video IDs to minimize response size
             ).execute()
             
             videos = []
-            for item in search_response.get('items', []):
-                video_id = item['id']['videoId']
-                
-                # Get video details including language information
-                video_response = youtube.videos().list(
-                    part='statistics,contentDetails,snippet',
-                    id=video_id
-                ).execute()
-                
-                video_details = video_response['items'][0]
+            video_ids = [item['id']['videoId'] for item in search_response.get('items', [])]
+            
+            if not video_ids:
+                return []
+            
+            # Get full video details in a single request
+            video_response = youtube.videos().list(
+                part='snippet,statistics,contentDetails',
+                id=','.join(video_ids),
+                fields='items(id,snippet(title,description,channelTitle,publishedAt,thumbnails/high/url),statistics,contentDetails/duration)'
+            ).execute()
+            
+            for video_details in video_response.get('items', []):
+                snippet = video_details['snippet']
                 stats = video_details['statistics']
                 duration = video_details['contentDetails']['duration']
+                title = snippet['title']
+
+                video_info = {
+                    'title': title,
+                    'description': snippet.get('description', ''),  # Get full description from video details
+                    'channel': snippet['channelTitle'],
+                    'published_at': snippet['publishedAt'],
+                    'thumbnail': snippet['thumbnails']['high']['url'],
+                    'video_id': video_details['id'],
+                    'video_url': f'https://www.youtube.com/watch?v={video_details["id"]}',
+                    'view_count': int(stats.get('viewCount', 0)),
+                    'like_count': int(stats.get('likeCount', 0)),
+                    'comment_count': int(stats.get('commentCount', 0)),
+                    'duration': duration,
+                }
+
+                logger.info("video info: {}".format(video_info))
+
+                videos.append(video_info)
                 
-                # Get video language information
-                default_language = video_details['snippet'].get('defaultLanguage')
-                default_audio_language = video_details['snippet'].get('defaultAudioLanguage')
-                title = item['snippet']['title']
-                
-                # Check if video title is in English
-                is_title_english = is_english_text(title)
-                
-                # Consider video as English if:
-                # 1. Default language is English, or
-                # 2. Default audio language is English, or
-                # 3. Title is in English (as fallback)
-                is_english_video = (
-                    (default_language and default_language.startswith('en')) or
-                    (default_audio_language and default_audio_language.startswith('en')) or
-                    is_title_english
-                )
-                
-                if is_english_video:
-                    video_info = {
-                        'title': title,
-                        'description': item['snippet']['description'],
-                        'channel': item['snippet']['channelTitle'],
-                        'published_at': item['snippet']['publishedAt'],
-                        'thumbnail': item['snippet']['thumbnails']['high']['url'],
-                        'video_id': video_id,
-                        'video_url': f'https://www.youtube.com/watch?v={video_id}',
-                        'view_count': stats.get('viewCount', 0),
-                        'like_count': stats.get('likeCount', 0),
-                        'comment_count': stats.get('commentCount', 0),
-                        'duration': duration,
-                        'language': default_language or default_audio_language or ('en' if is_title_english else 'unknown')
-                    }
-                    videos.append(video_info)
-                    
-                    # Print video details
-                    print(f"\nVideo found:")
-                    print(f"Title: {video_info['title']}")
-                    print(f"Channel: {video_info['channel']}")
-                    print(f"Views: {video_info['view_count']}")
-                    print(f"Likes: {video_info['like_count']}")
-                    print(f"Language: {video_info['language']}")
-                    print(f"URL: {video_info['video_url']}")
-                    print("---")
-                else:
-                    logger.info(f"Skipping non-English video: {title}")
+                # Print video details
+                print(f"\nVideo found:")
+                print(f"Title: {video_info['title']}")
+                print(f"Channel: {video_info['channel']}")
+                print(f"Views: {video_info['view_count']}")
+                print(f"Likes: {video_info['like_count']}")
+                print(f"URL: {video_info['video_url']}")
+                print("---")
     
         except Exception as e:
             if 'quota' in str(e).lower():
@@ -231,34 +213,30 @@ def download_audio(video_url, video_id, title, query_dir):
         str: Path to the downloaded audio file or None if file is too large
     """
     try:
-        # First check the file size
-        info_opts = {
-            'format': 'bestaudio/best',
-            'quiet': True,
-            'no_warnings': True
-        }
-        
-        with yt_dlp.YoutubeDL(info_opts) as ydl:
-            info = ydl.extract_info(video_url, download=False)
-            filesize = info.get('filesize') or info.get('filesize_approx', 0)
-            filesize_mb = filesize / (1024 * 1024)  # Convert to MB
-            
-            if filesize_mb > 20:
-                logger.warning(f"Skipping download: File size ({filesize_mb:.1f}MB) exceeds 20MB limit")
-                return None
-        
         video_dir = get_video_dir(video_id, title, query_dir)
         
+        # Configure options for smaller file size
         ydl_opts = {
-            'format': 'bestaudio/best',
+            # Try to get lower quality audio first
+            'format': 'worstaudio/bestaudio',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192',
+                'preferredquality': '96',  # Lower quality MP3 (96kbps instead of 192kbps)
             }],
             'outtmpl': str(video_dir / 'audio.%(ext)s'),
             'quiet': True,
-            'no_warnings': True
+            'no_warnings': True,
+            'nocheckcertificate': True,
+            # Add rate limiting to avoid throttling
+            'socket_timeout': 10,
+            'retries': 3,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate'
+            }
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -410,56 +388,55 @@ def main():
             print(f"\nProcessing video: {video['title']}")
             video_id = video['video_id']
             
-            # Try to get transcript first
-            print("Checking YouTube transcript availability...")
-            transcript_result = get_transcript(video_id, video['title'], query_dir)
+            # # Try to get transcript first – skip for now to avoid high cost API queries
+            # print("Checking YouTube transcript availability...")
+            # transcript_result = get_transcript(video_id, video['title'], query_dir)
             
-            if transcript_result['available']:
-                print("YouTube transcript available! Downloading...")
-                print(f"Transcript saved to: {transcript_result['transcript_path']}")
-                print(f"Preview (first 200 chars):\n{transcript_result['transcript'][:200]}...")
-            else:
-                print(f"YouTube transcript not available: {transcript_result['error']}")
-                print("Downloading audio for Whisper transcription...")
+            # if transcript_result['available']:
+            #     print("YouTube transcript available! Downloading...")
+            #     print(f"Transcript saved to: {transcript_result['transcript_path']}")
+            #     print(f"Preview (first 200 chars):\n{transcript_result['transcript'][:200]}...")
+            # else:
+            #     print(f"YouTube transcript not available: {transcript_result['error']}")
+            print("Downloading audio for Whisper transcription...")
+            
+            # Download audio and transcribe with Whisper
+            audio_path = download_audio(video['video_url'], video['video_id'], video['title'], query_dir)
+            if audio_path is None:
+                print("Skipping transcription: Audio file too large or unavailable")
+            elif audio_path:
+                print(f"Audio downloaded successfully to: {audio_path}")
+                print("Transcribing with Whisper...")
+                whisper_result = transcribe_audio(audio_path)
                 
-                # Download audio and transcribe with Whisper
-                audio_path = download_audio(video['video_url'], video['video_id'], video['title'], query_dir)
-                if audio_path is None:
-                    print("Skipping transcription: Audio file too large")
-                elif audio_path:
-                    print(f"Audio downloaded successfully to: {audio_path}")
-                    print("Transcribing with Whisper...")
-                    whisper_result = transcribe_audio(audio_path)
+                if whisper_result['available']:
+                    print("Whisper transcription successful!")
+                    print(f"Transcript saved to: {whisper_result['transcript_path']}")
+                    print(f"Preview (first 200 chars):\n{whisper_result['transcript'][:200]}...")
                     
-                    if whisper_result['available']:
-                        print("Whisper transcription successful!")
-                        print(f"Transcript saved to: {whisper_result['transcript_path']}")
-                        print(f"Preview (first 200 chars):\n{whisper_result['transcript'][:200]}...")
-                        
-                        # Save all video data to JSON
-                        video_dir = get_video_dir(video['video_id'], video['title'], query_dir)
-                        save_video_data(
-                            video_dir=video_dir,
-                            video_info={
-                                'title': video['title'],
-                                'description': video.get('description', ''),
-                                'channel': video['channel'],
-                                'publishedAt': video.get('published_at', ''),
-                                'statistics': {
-                                    'viewCount': str(video.get('view_count', 0)),
-                                    'likeCount': str(video.get('like_count', 0)),
-                                    'commentCount': str(video.get('comment_count', 0))
-                                },
-                                'duration': video.get('duration', ''),
-                                'language': video.get('language', '')
+                    # Save all video data to JSON
+                    video_dir = get_video_dir(video['video_id'], video['title'], query_dir)
+                    save_video_data(
+                        video_dir=video_dir,
+                        video_info={
+                            'title': video['title'],
+                            'description': video.get('description', ''),
+                            'channel': video['channel'],
+                            'publishedAt': video.get('published_at', ''),
+                            'statistics': {
+                                'viewCount': str(video.get('view_count', 0)),
+                                'likeCount': str(video.get('like_count', 0)),
+                                'commentCount': str(video.get('comment_count', 0))
                             },
-                            transcript=whisper_result['transcript']
-                        )
-                        print(f"Video data saved to: {video_dir / 'video_data.json'}")
-                    else:
-                        print(f"Whisper transcription failed: {whisper_result['error']}")
+                            'video_url': video.get('video_url', ''),
+                        },
+                        transcript=whisper_result['transcript']
+                    )
+                    print(f"Video data saved to: {video_dir / 'video_data.json'}")
                 else:
-                    print("Failed to download audio")
+                    print(f"Whisper transcription failed: {whisper_result['error']}")
+            else:
+                print("Failed to download audio")
             
             print("---")
     
