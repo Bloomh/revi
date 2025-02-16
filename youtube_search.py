@@ -423,6 +423,7 @@ def main():
                             'description': video.get('description', ''),
                             'channel': video['channel'],
                             'publishedAt': video.get('published_at', ''),
+                            'platform': 'YouTube',
                             'statistics': {
                                 'viewCount': str(video.get('view_count', 0)),
                                 'likeCount': str(video.get('like_count', 0)),
